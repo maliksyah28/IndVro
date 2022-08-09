@@ -1,4 +1,13 @@
-import { Flex, VStack, Box, Image, Text, Button } from "@chakra-ui/react";
+import {
+  Flex,
+  VStack,
+  Box,
+  Image,
+  Text,
+  Button,
+  Divider,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { getSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -8,18 +17,22 @@ import CreateComment from "../../components/PostComment";
 import Commented from "../../components/Commented";
 import ContentDetail from "../../components/ContentDetail";
 import instance from "../../servee";
+import EditCaption from "../../components/EditCaption";
 
 function postDetail(props) {
   // console.log(props);
   const { Postspecific } = props;
+  // console.log({ tes: props });
   const { PostComment } = props;
   // console.log(Postspecific);
   const { user } = props;
   // console.log(user);
   const { comment } = props;
   const { commentLength } = props;
+  const { likedPost } = props;
 
   const router = useRouter();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   // const [listComment, setListComment] = useState(comment);
   // const [komenLength, setKomenLength] = useState(commentLength);
   const [limit, setLimit] = useState(5);
@@ -114,26 +127,28 @@ function postDetail(props) {
   return (
     <VStack>
       <Flex
-        height="100vh"
+        height="90vh"
         width="full"
         maxWidth="100vw"
         ms="auto"
         me="auto"
         padding="0 10px"
+        // bgGradient={
+        //   "linear(270deg, rgba(252,247,255,1) 28%, rgba(18,61,97,1) 70%, rgba(10,0,133,1) 98%)"
+        // }
       >
         <Head>
           <title>DETAIL</title>
           <link rel="icon" href="../public/logo-enigma.ico" />
         </Head>
         <Flex flexGrow={"0.4"} w="70%" flexDirection="column" marginInline={2}>
-          <ContentDetail user={user} Postspecific={Postspecific} />
-          {/* <CreateComment
+          <ContentDetail
             user={user}
-            PostComment={PostComment}
             Postspecific={Postspecific}
-          /> */}
-
-          <Commented comment={comment} />
+            likedPost={likedPost}
+          />
+          <Divider />
+          <Commented user={user} comment={comment} />
         </Flex>
       </Flex>
     </VStack>
@@ -168,7 +183,7 @@ export async function getServerSideProps(context) {
       `/post/DetailContent/${idpost}`,
       config
     );
-    // console.log(responsGetPostDetail.data.data.result);
+    // console.log({ dongo: responsGetPostDetail.data.data.result });
 
     // ambil komentar
     const responsComment = await instance.get(
@@ -184,15 +199,19 @@ export async function getServerSideProps(context) {
       {},
       config
     );
+
+    // const getPostLikes = await instance.get(`/likes/getlike/${idpost}`, config);
+    // console.log(getPostLikes.data);
     // console.log(responsPostComment.data.data.result);
     return {
       props: {
         user: res.data.data.result[0],
         session,
-        Postspecific: responsGetPostDetail.data.data.result,
-        comment: responsComment.data.data.result,
-        commentLength: responsComment.data.data.datalength,
-        PostComment: responsPostComment.data.data.result,
+        Postspecific: responsGetPostDetail.data?.data.result,
+        comment: responsComment?.data?.data.result,
+        commentLength: responsComment?.data?.data.datalength,
+        PostComment: responsPostComment?.data?.data.result,
+        likedPost: responsGetPostDetail?.data?.data.likes,
       },
     };
   } catch (error) {

@@ -100,8 +100,8 @@ function profile(props) {
       </Head>
       <HStack direction={"row"} justifyContent="space-evenly">
         <Flex direction={"column"}>
-          <Text fontSize="4xl" noOfLines={1}>
-            Hi, My name is {Fullname}
+          <Text fontSize="4xl" noOfLines={1} position={"center"}>
+            {Fullname}
           </Text>
           <Text as="i" position={"center"}>
             {Bio}
@@ -133,6 +133,7 @@ function profile(props) {
       </HStack>
       <Divider />
       {/* <PostContent /> */}
+
       <FeedContent
         allPost={allPost}
         allPostedLength={allPostedLength}

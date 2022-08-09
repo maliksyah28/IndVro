@@ -9,8 +9,15 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  useDisclosure,
   Flex,
+  Box,
+  Badge,
+  Textarea,
 } from "@chakra-ui/react";
+import { DeleteIcon } from "@chakra-ui/icons";
+import { BsHeartFill } from "react-icons/bs";
+import { IconButton } from "@chakra-ui/react";
 import { MdInsertPhoto } from "react-icons/md";
 import { MdOutlineClose } from "react-icons/md";
 import Head from "next/head";
@@ -22,15 +29,20 @@ import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import PostContent from "../components/postContent";
 import FeedContent from "../components/FeedContent";
+import { useRouter } from "next/router";
+import EditCaption from "../components/EditCaption";
 
 export default function Home(props) {
   // console.log(props);
   const { allPost } = props;
   const { user } = props;
-  // console.log(user);
+  console.log(user);
   // console.log({ allPost });
   const { allPostedLength } = props;
   // console.log({ allPostedLength });
+  const router = useRouter();
+  const { idpost } = router.query;
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   //buat GET post
   const [content, setContent] = useState(allPost); // [{id : 1}, {id: 2}, {id: 3}]
@@ -109,14 +121,30 @@ export default function Home(props) {
       const getLimitedShow = 10;
       const getOfSet = (ofset - 1) * 10;
       const config = {
-        params: { getLimitedShow, getOfSet },
         headers: { Authorization: `Bearer ${token}` },
+        params: { getLimitedShow, getOfSet },
       };
-      // console.log(config.headers);
-      await instance.post(`/likes/likedContent/${idpost}`, {}, config);
-      alert("content Liked");
+
+      //get liked ?
+      const getliked = await instance.get(
+        `/likes/getlike/${idpost}`,
+        config
+      );
+      // console.log(config)
+      if (getliked.data.code == 400) {
+        return alert("You Have been liked");
+      } else if (getliked.data.code == 200) {
+        // console.log(config.headers);
+        alert("content Liked");
+      }
+      await instance.post(`/likes/likedContent/${idpost}`,{}, config);
+      console.log(config);
       //buat get kembali
-      const responsGetAllPost = await instance.get("/post/GetContent/", config);
+      const responsGetAllPost = await instance.get(
+        "/post/GetContent/",
+        
+        config
+      );
       // console.log({ responsGetAllPost });
       setContent(responsGetAllPost.data.data.result);
     } catch (error) {
@@ -136,6 +164,7 @@ export default function Home(props) {
         params: { getLimitedShow, getOfSet },
         headers: { Authorization: `Bearer ${token}` },
       };
+      
       await instance.delete(`/post/postdelete/${idpost}`, {}, config);
       alert("content Has Been Delete");
 
@@ -166,10 +195,26 @@ export default function Home(props) {
       // console.log({ responsGetAllPost });
       setContent(responsGetAllPost.data.data.result);
     } catch (error) {
-      onsole.log({ error });
+      console.log({ error });
       alert(error.response.data.message);
     }
   }
+
+  const onSaveNewCaption = async (caption) => {
+    try {
+      const session = await getSession();
+      const { token } = session.user;
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+      // const body = { caption };
+      await instance.patch(`/post/editCaptionContent/${idpost}`, body, config);
+      alert("thanks");
+    } catch (error) {
+      console.log({ error });
+      alert(error.response.data.message);
+    }
+  };
 
   // tampilan
   function renderContentUser() {
@@ -188,89 +233,130 @@ export default function Home(props) {
     }
     const contentMap = content.map((post) => {
       return (
-        <div className="w-[19vw] h-[25vw] flex flex-col items-start rounded-[1vh] border-gray-500 border mb-[1vh] relative overflow-hidden">
-          <a href={""} className="z-[2]">
-            <img
-              width={"100%"}
-              height={"100%"}
-              className="w-[10vh] h-[10vw] rounded-[1vh] z-[2]"
+        <Box
+          maxW="xl"
+          borderWidth="2px"
+          borderRadius="lg"
+          borderColor={"grey"}
+          overflow="hidden"
+          // marginLeft={25}
+          // marginRight={25}
+          marginTop={5}
+          // pos="-webkit-sticky"
+          justifyContent={"center"}
+          alignItems={"center"}
+          // margin={50}
+        >
+          <a href={`/detailPost/${post.idpost}`}>
+            <Image
+              width={"950%"}
+              height={`950%`}
               src={`http://localhost:2305${post.postan}`}
+              alt={post.postan}
             />
           </a>
-          <div className="flex flex-col items-between justify-between w-[100%] h-[2rem] z-[2]">
-            <p className="text-[0.9rem] text-gray-400">
-              {post.Timer.slice(0, 10)}
-            </p>
-            <div className="flex items-center">
-              <p>Likes: {post.likes}</p>
-              <Button
-                variant={"ghost"}
-                onClick={() => {
-                  likeContent(post.idpost);
-                }}
+          ​
+          <Box p="4" m={2}>
+            <Box display="flex" alignItems="baseline">
+              <Badge borderRadius="full" px="2" colorScheme="teal">
+                @{post.username}
+              </Badge>
+              <Box
+                color="gray.500"
+                fontWeight="semibold"
+                letterSpacing="wide"
+                fontSize="xs"
+                textTransform="uppercase"
+                ml="2"
               >
-                {" "}
-                LIKE{" "}
-              </Button>
-
-              <Button
-                variant={"ghost"}
-                onClick={() => {
-                  delContent(post.idpost);
-                }}
-              >
-                {" "}
-                DELETE{" "}
-              </Button>
-              <p> ID : {post.idpost}</p>
-            </div>
-            <p className="text-[1.2rem] font-[600]"> {post.caption}</p>{" "}
-            <Input
-              type="text"
-              value={caption}
-              placeholder="GANTI PAKE MODAL!!!"
-              variant="filled"
-              mb={3}
-              onChange={(event) => setCaption(event.target.value)}
-            />
-            <Button
-              variant={"ghost"}
-              onClick={() => {
-                editCaption(post.idpost);
-              }}
+                {post.likes} likes &bull;
+                <IconButton
+                  // marginStart={10}
+                  // marginTop={1}
+                  // padding=""
+                  marginLeft={3}
+                  variant={"unstyled"}
+                  color="red.400"
+                  _hover={{
+                    background: "#e8f5fe",
+                    color: "red.400",
+                    rounded: "full",
+                  }}
+                  icon={<BsHeartFill />}
+                  onClick={() => {
+                    likeContent(post.idpost);
+                  }}
+                ></IconButton>
+                <IconButton
+                  marginLeft={1}
+                  // marginTop={1}
+                  // padding=""
+                  variant={"unstyled"}
+                  marginBottom={2}
+                  color="Black"
+                  icon={<DeleteIcon />}
+                  onClick={() => {
+                    delContent(post.idpost);
+                  }}
+                ></IconButton>
+              </Box>
+            </Box>
+            ​
+            <Box
+              mt="1"
+              fontWeight="semibold"
+              as="h2"
+              fontStyle={"italic"}
+              lineHeight="tight"
+              noOfLines={1}
             >
-              {" "}
-              Save{" "}
-            </Button>
-          </div>
-          <div className="absolute w-[100%] h-[100%] bg-white blur-[60px] opacity-[.2]" />
-        </div>
+              {post.caption}
+            </Box>
+            ​
+            <Box
+              display="flex"
+              mt="2"
+              alignItems="center"
+              justifyContent={"end"}
+            >
+              <Box as="span" ml="1" color="gray.600" fontSize="x-small">
+                {post.Timer.slice(0, 10)} createdAt
+              </Box>
+            </Box>
+          </Box>
+        </Box>
       );
     });
     return (
-      <div className="flex flex-wrap items-start justify-evenly">
+      <Flex direction={"column"} justifyContent={"center"}>
         {contentMap}
-      </div>
+      </Flex>
     );
   }
   return (
-    <div className={styles.container}>
+    <div justifyContent={"center"} alignItems={"center"}>
+      {/* className={styles.container} */}
       <Head>
         <title>Home</title>
         <meta name="description" content="Generated by create next app" />
         <link rel="icon" href="logo-enigma.ico" />
       </Head>
-      <div className="w-[100%] h-[100%]">
+      <Flex
+        direction={"column"}
+        justifyContent={"center"}
+        alignItems={"center"}
+      >
+        {/* <div className="w-[100%] h-[100%]"> */}
         <div>
-          <Flex dir="row">
+          <Flex dir="row" marginRight={"380px"} marginBottom={5}>
             <form>
-              <input
+              <Textarea
                 type={"text"}
-                marginLeft={"5px"}
-                width={"50%"}
+                // marginRight={"5px"}
+                variant={"outline"}
+                width={"290%"}
                 height={"50%"}
                 placeholder="Describe your feel?"
-                variant={"ghost"}
                 value={captionPost}
                 onChange={(event) => setCaptionPost(event.target.value)}
               />
@@ -279,8 +365,8 @@ export default function Home(props) {
                   <MdOutlineClose onClick={() => setContentImage()} />
                   <Image
                     src={URL.createObjectURL(ContentImage)}
-                    width={"50%"}
-                    height={"50%"}
+                    width={"100%"}
+                    height={"100%"}
                   />
                 </Flex>
               )}
@@ -343,7 +429,8 @@ export default function Home(props) {
             user={user}
           /> */}
         </InfiniteScroll>
-      </div>
+        {/* </div> */}
+      </Flex>
 
       <footer className={styles.footer}>
         Powered by{" "}

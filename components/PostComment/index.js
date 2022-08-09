@@ -2,15 +2,27 @@ import { getSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import instance from "../../servee";
-import { Flex, Button, Input, Box, Image, Text } from "@chakra-ui/react";
+import {
+  Flex,
+  Button,
+  Input,
+  Box,
+  Image,
+  Text,
+  Textarea,
+  IconButton,
+} from "@chakra-ui/react";
 
-const CreateComment = ({ user, idpost }) => {
+const CreateComment = ({ user}) => {
+  
   const router = useRouter();
   //   console.log(Postspecific[0].idpost)
+  const { idpost } = router.query;
 
   const [comment, setComment] = useState();
 
-  async function postComment() {
+  async function postComment(idpost) {
+    // console.log(idpost)
     try {
       const session = await getSession();
       const { token } = session.user;
@@ -27,7 +39,7 @@ const CreateComment = ({ user, idpost }) => {
         config
       );
       alert(responsPostComment.data.message);
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.log(error);
       alert(error);
@@ -39,37 +51,55 @@ const CreateComment = ({ user, idpost }) => {
       <Box
         rounded={5}
         boxShadow="md"
-        marginBottom={2}
-        padding="2"
-        marginInlineStart={"25%"}
+        // marginBottom={2}
+        // padding="1"
+        // marginInlineStart={"25%"}
+        // height="100px"
       >
         {" "}
-        <Flex>
+        <Flex
+          bgGradient={
+            "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(244,244,244,1) 50%, rgba(249,249,249,1) 100%)"
+          }
+        >
           <Image
             src={`http://localhost:2305${user.profilepicture}`}
             height="45px"
             width="45px"
             objectFit={"cover"}
             rounded={"full"}
+            margin={4}
             marginBottom={2}
+            shadow={"outline"}
           ></Image>
-          <Text marginStart={3} marginTop={2} marginRight={2} fontSize="xl">
+          <Text marginStart={1} marginTop={2} marginRight={1} fontSize="xl">
             @{user.username}
           </Text>
-          <input
+
+          <Textarea
             type={"text"}
-            marginStart={4}
-            pading={"10px"}
-            width={"100%"}
-            placeholder="Give ur Advice"
-            variant={"ghost"}
+            marginStart={1}
+            // marginEnd={4}
+            width={"65%"}
+            placeholder="Your Opinion Here"
+            variant={"outline"}
             value={comment}
             onChange={(event) => setComment(event.target.value)}
           />
+          <Button
+            // marginEnd={2}
+            marginLeft={6}
+            px={"4"}
+            py={"2"}
+            rounded={"full"}
+            onClick={() => {
+              postComment(idpost);
+            }}
+          >
+            Comment
+          </Button>
+          <IconButton />
         </Flex>
-        <Button px={"5"} py={"2"} rounded={"full"} onClick={postComment}>
-          Comment
-        </Button>
       </Box>
     </>
   );

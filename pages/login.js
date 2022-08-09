@@ -1,9 +1,10 @@
 import { Flex, Button, Heading, Input, Box, Link } from "@chakra-ui/react";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
 
 function login() {
   // formLog : {email, }
@@ -11,6 +12,10 @@ function login() {
   const [pass, setPasslog] = useState("");
   const router = useRouter();
   const [loginProcess, setloginProcess] = useState(false);
+  const [view, setView] = useState()
+
+  const { data: session } = useSession();
+  if (session) router.replace("/");
 
   const loginClick = async () => {
     try {
@@ -75,14 +80,19 @@ function login() {
             mb={3}
             onChange={(event) => setEmaillog(event.target.value)}
           />
+          <Flex>
           <Input
-            type="password"
+            type={view ? "text" : "password"}
             value={pass}
-            placeholder="password"
+            placeholder=" • • • • •"
             variant="filled"
-            mb={6}
+            mb={3}
             onChange={(event) => setPasslog(event.target.value)}
           />
+          <Button onClick={() => setView((view) => !view)}>
+            {view ? <BsFillEyeSlashFill /> : <BsFillEyeFill />}
+          </Button>
+          </Flex>
           <Button
             isLoading={loginProcess}
             colorScheme="teal"

@@ -4,11 +4,14 @@ import Image from "next/image";
 import { getSession } from "next-auth/react";
 import instance from "../../servee";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { Button, Input, Flex } from "@chakra-ui/react";
+import { Button, Input, Flex, Box, Badge, Textarea } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import styles from "../../styles/Home.module.css";
 import { MdInsertPhoto } from "react-icons/md";
 import { MdOutlineClose } from "react-icons/md";
+import { DeleteIcon } from "@chakra-ui/icons";
+import { BsHeartFill } from "react-icons/bs";
+import { IconButton } from "@chakra-ui/react";
 
 const FeedContent = ({ allPost, allPostedLength, user }) => {
   const router = useRouter();
@@ -17,7 +20,7 @@ const FeedContent = ({ allPost, allPostedLength, user }) => {
   const [content, setContent] = useState(allPost); // [{id : 1}, {id: 2}, {id: 3}]
   // console.log(content);
   const [ofset, setOfSet] = useState(1);
-  const [caption, setCaption] = useState();
+  // const [caption, setCaption] = useState();
 
   async function fetchMorePost() {
     try {
@@ -85,14 +88,16 @@ const FeedContent = ({ allPost, allPostedLength, user }) => {
     }
     return (
       <div>
-        <Flex dir="row">
+        <Flex justifyContent={"space-between"}>
           <form>
-            <input
+            <Textarea
               type={"text"}
+              marginStart={1}
+              // marginEnd={4}
+              variant={"outline"}
               marginLeft={"5px"}
-              width={"100%"}
-              placeholder="Describe your feel?"
-              variant={"ghost"}
+              width={"280%"}
+              placeholder="Describe your feel"
               value={captionPost}
               onChange={(event) => setCaptionPost(event.target.value)}
             />
@@ -100,9 +105,9 @@ const FeedContent = ({ allPost, allPostedLength, user }) => {
               <Flex flexDirection="column">
                 <MdOutlineClose onClick={() => setContentImage()} />
                 <Image
-                  width={"20px"}
-                  height={"20px"}
-                  boxSize="100px"
+                  width={"100%"}
+                  height={"100%"}
+                  // boxSize="100px"
                   objectFit="cover"
                   src={URL.createObjectURL(ContentImage)}
                 />
@@ -152,19 +157,22 @@ const FeedContent = ({ allPost, allPostedLength, user }) => {
         params: { getLimitedShow, getOfSet },
         headers: { Authorization: `Bearer ${token}` },
       };
-      // console.log(config.headers);
-      await instance.post(`/likes/likedContent/${idpost}`, {}, config);
+      const getliked = await instance.get(`/likes/getlike/${idpost}`, config);
+      // console.log(getliked);
+      if (getliked.data.code == 400) return alert("You Have been liked");
+      // } else if (getliked.data.code == 200) {
+      //   // console.log(config.headers);
+      // }
       alert("content Liked");
-      //buat get kembali
-      const responsGetAllPost = await instance.get(
-        "/post/GetContent/:idpost",
-        config
-      );
+      await instance.post(`/likes/likedContent/${idpost}`, {}, config);
+      // window.location.reload();
+      // buat get kembali
+      const responsGetAllPost = await instance.get("/post/GetContent/", config);
       // console.log({ responsGetAllPost });
       setContent(responsGetAllPost.data.data.result);
     } catch (error) {
       console.log({ error });
-      alert(error.response.data.message);
+      alert(error);
     }
   }
 
@@ -188,6 +196,7 @@ const FeedContent = ({ allPost, allPostedLength, user }) => {
     } catch (error) {
       console.log({ error });
       alert(error.response.data.message);
+      // error.response.data.message
     }
   }
 
@@ -235,107 +244,145 @@ const FeedContent = ({ allPost, allPostedLength, user }) => {
     const contentMap = content.map((post) => {
       if (user.username == post.username)
         return (
-          <div className="w-[19vw] h-[25vw] flex flex-col items-start rounded-[1vh] border-gray-500 border mb-[1vh] relative overflow-hidden">
-            <a href={`/detailPost/${post.idpost}`} className="z-[2]">
-              <img
-                className="w-[10vh] h-[10vw] rounded-[1vh] z-[2]"
+          <Box
+            maxW="xl"
+            borderWidth="2px"
+            borderRadius="lg"
+            borderColor={"grey"}
+            overflow="hidden"
+            // marginLeft={25}
+            marginTop={5}
+            justifyContent={"center"}
+            alignItems={"center"}
+            // pos="-webkit-sticky"
+          >
+            <a href={`/detailPost/${post.idpost}`}>
+              <Image
+                width={"950%"}
+                height={`950%`}
                 src={`http://localhost:2305${post.postan}`}
+                alt={post.postan}
               />
             </a>
-            <div className="flex flex-col items-between justify-between w-[100%] h-[2rem] z-[2]">
-              <p className="text-[0.9rem] text-gray-400">
-                {post.Timer.slice(0, 10)}
-              </p>
-              <div className="flex items-center">
-                <p>Likes: {post.likes}</p>
-                <Button
-                  variant={"ghost"}
-                  onClick={() => {
-                    likeContent(post.idpost);
-                  }}
-                >
-                  {" "}
-                  LIKE{" "}
-                </Button>
 
-                <Button
-                  variant={"ghost"}
-                  onClick={() => {
-                    delContent(post.idpost);
-                  }}
+            <Box p="4" m={2}>
+              <Box display="flex" alignItems="baseline">
+                <Badge borderRadius="full" px="2" colorScheme="teal">
+                  @{post.username}
+                </Badge>
+                <Box
+                  color="gray.500"
+                  fontWeight="semibold"
+                  letterSpacing="wide"
+                  fontSize="xs"
+                  textTransform="uppercase"
+                  ml="2"
                 >
-                  {" "}
-                  DELETE{" "}
-                </Button>
-                <p> ID : {post.idpost}</p>
-              </div>
-              <p className="text-[1.2rem] font-[600]"> {post.caption}</p>{" "}
-              <Input
-                type="text"
-                value={caption}
-                placeholder="GANTI PAKE MODAL!!!"
-                variant="filled"
-                mb={3}
-                onChange={(event) => setCaption(event.target.value)}
-              />
-              <Button
-                variant={"ghost"}
-                onClick={() => {
-                  editCaption(post.idpost);
-                }}
+                  {post.likes} likes &bull;
+                  <IconButton
+                    // marginStart={10}
+                    // marginTop={1}
+                    // padding=""
+                    marginLeft={3}
+                    variant={"unstyled"}
+                    color="red.400"
+                    _hover={{
+                      background: "#e8f5fe",
+                      color: "red.400",
+                      rounded: "full",
+                    }}
+                    icon={<BsHeartFill />}
+                    onClick={() => {
+                      likeContent(post.idpost);
+                    }}
+                  ></IconButton>
+                  <IconButton
+                    marginLeft={1}
+                    // marginTop={1}
+                    // padding=""
+                    variant={"unstyled"}
+                    marginBottom={2}
+                    color="Black"
+                    icon={<DeleteIcon />}
+                    onClick={() => {
+                      delContent(post.idpost);
+                    }}
+                  ></IconButton>
+                </Box>
+              </Box>
+
+              <Box
+                mt="1"
+                fontWeight="semibold"
+                as="h2"
+                fontStyle={"italic"}
+                lineHeight="tight"
+                noOfLines={1}
               >
-                {" "}
-                Save{" "}
-              </Button>
-            </div>
-            <div className="absolute w-[100%] h-[100%] bg-white blur-[60px] opacity-[.2]" />
-          </div>
+                {post.caption}
+              </Box>
+
+              <Box
+                display="flex"
+                mt="2"
+                alignItems="center"
+                justifyContent={"end"}
+              >
+                <Box as="span" ml="1" color="gray.600" fontSize="x-small">
+                  {post.Timer.slice(0, 10)} createdAt
+                </Box>
+              </Box>
+            </Box>
+          </Box>
         );
     });
     return (
-      <div className="flex flex-wrap items-start justify-evenly">
+      <Flex direction={"column"} justifyContent={"center"}>
         {contentMap}
-      </div>
+      </Flex>
     );
   }
   return (
     // <div>HEHE</div>
-    <div className={styles.container}>
-      <div className="w-[100%] h-[100%]">
-        {postCaption()}
-        <InfiniteScroll
-          dataLength={allPostedLength}
-          next={() => {
-            setTimeout(() => {
-              fetchMorePost();
-            }, 2000);
-          }}
-          //hasMore={content.length != allPostedLength}
-          loader={
-            <h4 className="w-[100%] flex items-center justify-center ">
-              Loading
-            </h4>
-          }
-          // className="overflow-auto scrollbar"
-          endMessage={
-            <div style={{ textAlign: "center" }}>
-              <p className="font-[montserrat] font-[700]">
-                Yay! You have seen it all
-              </p>
-            </div>
-          }
-        >
-          {renderContentUser()}
-        </InfiniteScroll>
-      </div>
-
+    <>
+      <Flex justifyContent={"center"}>
+        {/* <div className={styles.container}> */}
+        {/* className="w-[10] h-[10] */}
+        <div w={10} h={10}>
+          {postCaption()}
+          <InfiniteScroll
+            dataLength={allPostedLength}
+            next={() => {
+              setTimeout(() => {
+                fetchMorePost();
+              }, 2000);
+            }}
+            //hasMore={content.length != allPostedLength}
+            loader={
+              <h4 className="w-[100%] flex items-center justify-center ">
+                Loading
+              </h4>
+            }
+            // className="overflow-auto scrollbar"
+            endMessage={
+              <div style={{ textAlign: "center" }}>
+                <p className="font-[montserrat] font-[700]">
+                  Yay! You have seen it all
+                </p>
+              </div>
+            }
+          >
+            {renderContentUser()}
+          </InfiniteScroll>
+        </div>
+      </Flex>
       <footer className={styles.footer}>
         Powered by{" "}
         <span className={styles.logo}>
           <Image src="/enigma.png" alt="Vercel Logo" width={72} height={16} />
         </span>
       </footer>
-    </div>
+    </>
   );
 };
 

@@ -1,13 +1,19 @@
 import { Flex, Heading, Input, Button, head } from "@chakra-ui/react";
+import { useSession } from "next-auth/react";
 import Head from "next/head";
 import { useState } from "react";
 import instance from "../servee";
+import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
 
 function register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rePassword, setRepassword] = useState("");
+  const [view, setView] = useState()
+
+  const { data: session } = useSession();
+  if (session) router.replace("/");
 
   const RegisterClick = async () => {
     try {
@@ -53,22 +59,32 @@ function register() {
             mb={3}
             onChange={(event) => setUsername(event.target.value)}
           />
+          <Flex>
           <Input
-            type="password"
+            type={view ? "text" : "password"}
             value={password}
             placeholder=" • • • • •"
             variant="filled"
             mb={3}
             onChange={(event) => setPassword(event.target.value)}
           />
+          <Button onClick={() => setView((view) => !view)}>
+            {view ? <BsFillEyeSlashFill /> : <BsFillEyeFill />}
+          </Button>
+          </Flex>
+         <Flex>
           <Input
-            type="password"
+            type={view ? "text" : "password"}
             value={rePassword}
             placeholder=" • • • • •"
             variant="filled"
             mb={3}
             onChange={(event) => setRepassword(event.target.value)}
           />
+          <Button onClick={() => setView((view) => !view)}>
+            {view ? <BsFillEyeSlashFill /> : <BsFillEyeFill />}
+          </Button>
+          </Flex>
           <Button colorScheme="teal" onClick={RegisterClick}>
             Register
           </Button>

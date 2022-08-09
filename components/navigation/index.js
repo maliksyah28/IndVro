@@ -89,11 +89,6 @@ function Navigation() {
 
           {session && (
             <>
-              <NextLink href="/about">
-                <Button variant="ghost" my={5} w="100%">
-                  About Us
-                </Button>
-              </NextLink>
               <NextLink href="/login">
                 <Button onClick={onLogoutClick} variant="ghost" my={5} w="100%">
                   Logout

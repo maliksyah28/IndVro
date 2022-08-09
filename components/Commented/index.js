@@ -2,7 +2,7 @@ import { Flex, Text, Image, Box } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
-export default function Commented({ id, comment }) {
+export default function Commented({ user, comment }) {
   // 0: {user_Id: 26, username: 'weltqaz', comment: 'pertamax gan ini', createdAt: '2022-08-04T16:25:02.000Z'}
   //1: {user_Id: 26, username: 'weltqaz', comment: 'kedua gan ini', createdAt: '2022-
   // console.log(comment); // ini isi nya array
@@ -27,30 +27,49 @@ export default function Commented({ id, comment }) {
     const komenMap = komentar.map((komen) => {
       // console.log(komen.username);
       return (
-        <Flex
-          dir="column"
-          mt="5px"
-          _hover={{
-            background: "#e8f5fe",
-            borderRadius: "10px",
-          }}
-          transitionDuration="500ms"
-        >
-          <Box p={3}>
-            <Flex dir="row">
-              <Text marginStart={2}> {komen.username}</Text>
-              <Text marginStart={3}> {komen.createdAt.slice(0, 10)}</Text>
-              <Text marginStart={4}> {komen.comment}</Text>
+        <Flex direction={"column"} rounded={5} boxShadow="lg" marginBottom={2}>
+          <Flex dir="row">
+            <Image
+              src={`http://localhost:2305${komen.profilepicture}`}
+              height="45px"
+              width="45px"
+              objectFit={"cover"}
+              rounded={"full"}
+              margin={4}
+              marginBottom={2}
+              shadow={"outline"}
+            ></Image>
+            <Text marginStart={3} marginTop={3} marginRight={1} fontSize="xl">
+              @{komen.username} :
+            </Text>
+            <Text
+              marginStart={3}
+              marginTop={3}
+              marginRight={1}
+              fontStyle="italic"
+              fontSize="xl"
+            >
+              {komen.comment}
+            </Text>
+          </Flex>
+          <Flex justifyContent={"end"}>
+            <Flex dir="column" justifyContent={"end"}>
+              <Text fontSize="xx-small"> {komen.createdAt.slice(0, 10)}</Text>
             </Flex>
-            <Text>{komen.comment}</Text>
-          </Box>
+          </Flex>
         </Flex>
       );
     });
     return (
-      <div className="flex flex-wrap items-start justify-evenly">
+      <Flex
+        direction={"column"}
+        rounded={5}
+        boxShadow="md"
+        marginBottom={5}
+        marginInlineStart={"25%"}
+      >
         {komenMap}
-      </div>
+      </Flex>
     );
   }
 
